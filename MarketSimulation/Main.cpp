@@ -109,9 +109,8 @@ void runSimulation(Dealer& dealer, int num_sims, const string& outputFileName=""
 	vector<Result> simResults;
 
 	dealer.runSimulation(num_sims, 100, simResults);
-
-	ofstream outFile;
-	outFile.open(outputFileName);
+	fstream outFile;
+	outFile.open(outputFileName, ios::out);
 	outFile << "sim" ;
 	for (int p = 0; p <= 100; p++) {
 		outFile << ",p" << p;
@@ -183,6 +182,7 @@ int main()
 	for (Agent* a : noiseAgents) {
 		dealer.addAgent(a);
 	}
+
 
 	// run the simulation with just a noise trader
 	cout << "Running noise" << endl;
@@ -274,8 +274,8 @@ int main()
 	auto vc_all_agents = runVolSurface(all_dealer, 10000);
 
 
-	ofstream outFilePrices;
-	outFilePrices.open("agent_prices.csv");
+	fstream outFilePrices;
+	outFilePrices.open("agent_prices.csv", ios::out);
 	outFilePrices << "T,Noise,Value,Trend,All" << endl;
 	for (int off = 0; off < vc_jn.size(); off++) {
 		outFilePrices << vc_jn[off].T
@@ -287,8 +287,8 @@ int main()
 	}
 	outFilePrices.close();
 
-	ofstream outFileVols;
-	outFileVols.open("agent_implied_vols.csv");
+	fstream outFileVols;
+	outFileVols.open("agent_implied_vols.csv", ios::out);
 	outFileVols << "T,Noise,Value,Trend,All" << endl;
 	for (int off = 0; off < vc_jn.size(); off++) {
 		outFileVols << vc_jn[off].T
