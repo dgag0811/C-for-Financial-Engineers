@@ -1,80 +1,92 @@
 #include <iostream>
 #include <vector>
 #include <random>
-#include <iomanip>
+#include <cmath>
+#include <chrono>
+#include <algorithm>
+using namespace std;
 
 #include "agents.h"
-using namespace std;
+
+double simUniform()
+{
+	static std::mt19937 mt_rand(12345);
+	static std::uniform_real_distribution<double> dist(0, 1);
+
+	return dist(mt_rand);
+}
 
 double simStandardNormal()
 {
-	static std::mt19937 mt_rand(1234500);
+	static std::mt19937 mt_rand(12345);
 	static std::normal_distribution<double> dis_normal(0, 1);
 
 	return dis_normal(mt_rand);
 }
 
 Agent::Agent(double tradeProb, double tradeScale) {
-	tradeProb = tradeProb;
-	tradeScale = tradeScale;
+	TradeProb = tradeProb;
+	TradeScale = tradeScale;
 }
 
 Dealer::Dealer(double priceScale) {
-	priceScale = priceScale;
+	PriceScale = priceScale;
 }
 
 void Dealer::addAgent(Agent* a) {
 	agents.push_back(a);
 }
+
 double Dealer::getPrice(double net) {
-	return(exp(priceScale * net));
+	return(exp(PriceScale * net));
 }
 
-void Dealer::runSimulation(int numSimulations, int numPeriods, vector< Result >& simResults) {
+void Dealer::runSimulation(int numSimulations, int numPeriods, vector<Result>& simResults) {
 	simResults.clear();
 	double price, net;
-
-	for (int simNumber = 1; simNumber <= numSimulations; simNumber++) {
-		for (int j = 0; j < sizeof(agents); j++) {
+	int period;
+	for (int simNum = 1; simNum <= numSimulations; simNum ++) {
+		for (int j = 0; j < agents.size(); j++) {
 			agents[j]->reset();	//reset agents
 		}
 		price = 1.0;
 		net = 0.0;
-		Result r(simNumber, 0, 1.0);
-		simResults.push_back(r);
-
-		//Add the starting Result object to simResults
-		for (int period = 1; period <= numPeriods; period++) {
-			for (int j = 0; j < sizeof(agents); j++) {
-				double u = simStandardNormal();
-				if (u < agents[j]->tradeProb) {
-					net = net + agents[j]->tick(price);
+		Result r1(simNum, 0, 1.0);
+		simResults.push_back(r1);
+		for (period = 1; period <= numPeriods; period++) 
+		{
+			for (int j = 0; j < agents.size(); j++)
+			{
+				double u = simUniform();
+				if (u < agents[j]->TradeProb) {
+					net = net + agents[j]->tick(price);	
 				}
 			}
 			price = getPrice(net);
-			Result r(simNumber, period, price);
-			simResults.push_back(r);
+			Result r2(simNum, period, price);
+			simResults.push_back(r2);
 		}
 	}
 }
 
 double ValueAgent::tick(double price) {
-	double netToTrade = tradeScale * (-0.5 + 1.0 / (2.0 + log(price)));
+	double netToTrade = TradeScale * (-0.5 + (1.0 / (2.0 + log(price))));
 	return(netToTrade);
 }
 
 double TrendAgent::tick(double price) {
-	double netToTrade = tradeScale * log(price) - log(prevPrice);
+	double netToTrade = TradeScale * (log(price) - log(prevPrice));
 	prevPrice = price;
 	return(netToTrade);
 }
 
 void TrendAgent::reset() {
 	Agent::reset();
-	prevPrice = 1.0;
+	prevPrice = 1;
 }
 
 double NoiseAgent::tick(double price) {
-	double netToTrade = simStandardNormal() * tradeScale;
+	double netToTrade = simStandardNormal()*TradeScale;
 	return(netToTrade);
+
 }
